@@ -9,6 +9,7 @@ import {
   useSignMessage
 } from 'wagmi'
 import { mainnet, bsc } from 'wagmi/chains'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,9 +23,19 @@ import { shortenAddr } from '@/lib/utils'
 import Synergy from '../assets/images/Synergy.svg'
 import Eth from '../assets/images/Ethereum.svg'
 import Bsc from '../assets/images/Bsc.svg'
+import MetaMaskIcon from '../assets/images/Metamask.svg'
+import CoinbaseIcon from '../assets/images/Coinbase.svg'
+// import PhantomIcon from '../assets/images/Phanton.svg'
+import WalletConnectIcon from '../assets/images/WalletConnect.svg'
 
 interface WalletConnectionProps {
   onError: (error: string) => void
+}
+
+interface WalletOption {
+  name: string
+  icon: string
+  connectorId: number
 }
 
 export function WalletConnection({ onError }: WalletConnectionProps) {
@@ -42,6 +53,31 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false)
   const [isSigningMessage, setIsSigningMessage] = useState(false)
   const [hasSignedMessage, setHasSignedMessage] = useState(false)
+  const [showWalletOptions, setShowWalletOptions] = useState(false)
+  const [connectingWallet, setConnectingWallet] = useState<string | null>(null)
+
+  const walletOptions: WalletOption[] = [
+    {
+      name: 'MetaMask',
+      icon: MetaMaskIcon,
+      connectorId: 0
+    },
+    {
+      name: 'Coinbase',
+      icon: CoinbaseIcon,
+      connectorId: 1
+    },
+    // {
+    //   name: 'Phantom',
+    //   icon: PhantomIcon,
+    //   connectorId: 2
+    // },
+    {
+      name: 'WalletConnect',
+      icon: WalletConnectIcon,
+      connectorId: 2
+    }
+  ]
 
   useEffect(() => {
     if (isConnected && !hasSignedMessage) {
@@ -49,20 +85,26 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
     }
   }, [address])
 
-  const handleConnect = async () => {
+  const handleConnect = async (connectorId: number, walletName: string) => {
     try {
       setIsConnecting(true)
+      setConnectingWallet(walletName)
+      const connector = connectors[connectorId]
+      if (!connector) {
+        throw new Error('Connector not found')
+      }
       const result = await connectAsync({
-        connector: connectors[0]
+        connector
       })
       if (result?.accounts[0]) {
-        // Connected successfully
+        setShowWalletOptions(false)
       }
     } catch (error) {
-      onError('Failed to connect wallet')
+      onError(`Failed to connect ${walletName}`)
       console.error(error)
     } finally {
       setIsConnecting(false)
+      setConnectingWallet(null)
     }
   }
 
@@ -105,16 +147,36 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
 
   if (!isConnected) {
     return (
-      <Button onClick={handleConnect} disabled={isConnecting} className='w-auto'>
-        {isConnecting ? (
-          <>
-            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-            Connecting...
-          </>
-        ) : (
-          'Connect Wallet'
-        )}
-      </Button>
+      <>
+        <Button onClick={() => setShowWalletOptions(true)} className='w-auto'>
+          Connect Wallet
+        </Button>
+
+        <Dialog open={showWalletOptions} onOpenChange={setShowWalletOptions}>
+          <DialogContent className='sm:max-w-md  bg-secondary-foreground'>
+            <DialogHeader>
+              <DialogTitle className='text-gray-50 font-normal'>Connect Wallet</DialogTitle>
+            </DialogHeader>
+            <div className='grid gap-2 py-4'>
+              {walletOptions.map((wallet) => (
+                <Button
+                  key={wallet.name}
+                  onClick={() => handleConnect(wallet.connectorId, wallet.name)}
+                  disabled={isConnecting}
+                  variant='outline'
+                  className='w-full h-14 flex items-center justify-start px-4 space-x-3 bg-[#1B1B1B] hover:bg-gray-100 text-gray-50'
+                >
+                  <img src={wallet.icon} alt={wallet.name} className='h-8 w-8' />
+                  <span className='flex-1 text-left'>{wallet.name}</span>
+                  {isConnecting && connectingWallet === wallet.name && (
+                    <Loader2 className='h-4 w-4 animate-spin ml-2' />
+                  )}
+                </Button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     )
   }
 
@@ -136,7 +198,6 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem>
-                {' '}
                 <Button
                   className='w-full justify-start'
                   variant={chainId === mainnet.id ? 'default' : 'outline'}
@@ -202,7 +263,6 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
                 </Button>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                {' '}
                 <Button onClick={handleDisconnect} variant='outline' className='w-full'>
                   <LogOut className='h-5 w-5' />
                   Disconnect
