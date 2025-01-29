@@ -1,7 +1,7 @@
 import { WagmiProvider } from 'wagmi'
 import { config } from './wagmi'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WalletConnection } from './components/WalletConnection'
 
@@ -9,6 +9,14 @@ const queryClient = new QueryClient()
 
 export default function App() {
   const [error, setError] = useState<string>('')
+
+  useEffect(() => {
+    if (error) {
+      setTimeout(() => {
+        setError('')
+      }, 3000)
+    }
+  }, [error])
 
   return (
     <WagmiProvider config={config}>

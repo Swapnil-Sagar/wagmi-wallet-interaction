@@ -19,24 +19,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2, LogOut, ChevronDown } from 'lucide-react'
-import { shortenAddr } from '@/lib/utils'
+import { shortenAddr, walletOptions, WELCOME_MESSAGE } from '@/lib/utils'
 import Synergy from '../assets/images/Synergy.svg'
 import Eth from '../assets/images/Ethereum.svg'
 import Bsc from '../assets/images/Bsc.svg'
-import MetaMaskIcon from '../assets/images/Metamask.svg'
-import CoinbaseIcon from '../assets/images/Coinbase.svg'
-// import PhantomIcon from '../assets/images/Phanton.svg'
-import WalletConnectIcon from '../assets/images/WalletConnect.svg'
-
-interface WalletConnectionProps {
-  onError: (error: string) => void
-}
-
-interface WalletOption {
-  name: string
-  icon: string
-  connectorId: number
-}
+import { WalletConnectionProps } from '@/lib/interface'
 
 export function WalletConnection({ onError }: WalletConnectionProps) {
   const { address, isConnected } = useAccount()
@@ -52,38 +39,22 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
   const [isConnecting, setIsConnecting] = useState(false)
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false)
   const [isSigningMessage, setIsSigningMessage] = useState(false)
-  const [hasSignedMessage, setHasSignedMessage] = useState(false)
+  const [hasSignedMessage, setHasSignedMessage] = useState(() => {
+    return localStorage.getItem('hasSignedMessage') === 'true'
+  })
   const [showWalletOptions, setShowWalletOptions] = useState(false)
   const [connectingWallet, setConnectingWallet] = useState<string | null>(null)
 
-  const walletOptions: WalletOption[] = [
-    {
-      name: 'MetaMask',
-      icon: MetaMaskIcon,
-      connectorId: 0
-    },
-    {
-      name: 'Coinbase',
-      icon: CoinbaseIcon,
-      connectorId: 1
-    },
-    // {
-    //   name: 'Phantom',
-    //   icon: PhantomIcon,
-    //   connectorId: 2
-    // },
-    {
-      name: 'WalletConnect',
-      icon: WalletConnectIcon,
-      connectorId: 2
+  useEffect(() => {
+    if (isConnected && !isSigningMessage) {
+      // handleSignMessage()
     }
-  ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address])
 
   useEffect(() => {
-    if (isConnected && !hasSignedMessage) {
-      //   handleSignMessage()
-    }
-  }, [address])
+    localStorage.setItem('hasSignedMessage', hasSignedMessage.toString())
+  }, [hasSignedMessage])
 
   const handleConnect = async (connectorId: number, walletName: string) => {
     try {
@@ -122,11 +93,13 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
     try {
       setIsSigningMessage(true)
       await signMessageAsync({
-        message: 'Welcome to our dApp! Please sign this message to verify your ownership.'
+        message: WELCOME_MESSAGE
       })
       setHasSignedMessage(true)
     } catch (error) {
-      onError('Failed to sign message')
+      if (!hasSignedMessage) {
+        onError('Failed to sign message')
+      }
       console.error(error)
     } finally {
       setIsSigningMessage(false)

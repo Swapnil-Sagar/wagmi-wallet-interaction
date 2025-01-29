@@ -34,7 +34,7 @@ module.exports = {
         },
         accent: {
           DEFAULT: 'var(--accent)',
-          foreground: 'var(--accent-foreground))'
+          foreground: 'var(--accent-foreground)'
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
