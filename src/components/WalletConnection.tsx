@@ -9,7 +9,6 @@ import {
   useSignMessage
 } from 'wagmi'
 import { mainnet, bsc } from 'wagmi/chains'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,11 +18,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2, LogOut, ChevronDown } from 'lucide-react'
-import { shortenAddr, walletOptions, WELCOME_MESSAGE } from '@/lib/utils'
+import { shortenAddr, WELCOME_MESSAGE } from '@/lib/utils'
 import Synergy from '../assets/images/Synergy.svg'
 import Eth from '../assets/images/Ethereum.svg'
 import Bsc from '../assets/images/Bsc.svg'
 import { WalletConnectionProps } from '@/lib/interface'
+import WalletListDialog from './WalletListDialog'
 
 export function WalletConnection({ onError }: WalletConnectionProps) {
   const { address, isConnected } = useAccount()
@@ -47,7 +47,7 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
 
   useEffect(() => {
     if (isConnected && !isSigningMessage) {
-      // handleSignMessage()
+      handleSignMessage()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address])
@@ -121,34 +121,20 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
   if (!isConnected) {
     return (
       <>
-        <Button onClick={() => setShowWalletOptions(true)} className='w-auto'>
+        <Button
+          onClick={() => setShowWalletOptions(true)}
+          className='w-auto'
+          aria-label='Connect Wallet'
+        >
           Connect Wallet
         </Button>
-
-        <Dialog open={showWalletOptions} onOpenChange={setShowWalletOptions}>
-          <DialogContent className='sm:max-w-md  bg-secondary-foreground'>
-            <DialogHeader>
-              <DialogTitle className='text-gray-50 font-normal'>Connect Wallet</DialogTitle>
-            </DialogHeader>
-            <div className='grid gap-2 py-4'>
-              {walletOptions.map((wallet) => (
-                <Button
-                  key={wallet.name}
-                  onClick={() => handleConnect(wallet.connectorId, wallet.name)}
-                  disabled={isConnecting}
-                  variant='outline'
-                  className='w-full h-14 flex items-center justify-start px-4 space-x-3 bg-[#1B1B1B] hover:bg-gray-100 text-gray-50'
-                >
-                  <img src={wallet.icon} alt={wallet.name} className='h-8 w-8' />
-                  <span className='flex-1 text-left'>{wallet.name}</span>
-                  {isConnecting && connectingWallet === wallet.name && (
-                    <Loader2 className='h-4 w-4 animate-spin ml-2' />
-                  )}
-                </Button>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+        <WalletListDialog
+          showWalletOptions={showWalletOptions}
+          setShowWalletOptions={setShowWalletOptions}
+          handleConnect={handleConnect}
+          isConnecting={isConnecting}
+          connectingWallet={connectingWallet}
+        />
       </>
     )
   }
@@ -159,7 +145,11 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
         <div className='flex items-center px-2 rounded-md justify-between w-fit gap-2 bg-accent-foreground'>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='outline' className='flex items-center bg-transparent'>
+              <Button
+                variant='outline'
+                className='flex items-center bg-transparent'
+                aria-label='Switch Network'
+              >
                 {isSwitchingNetwork ? (
                   <Loader2 className='h-4 w-4 animate-spin' />
                 ) : (
@@ -177,6 +167,7 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
                   onClick={() => handleSwitchNetwork(mainnet.id)}
                   disabled={isSwitchingNetwork}
                   size='sm'
+                  aria-label='Switch to Eth'
                 >
                   <img src={Eth} alt='icon' className='h-5 w-5' />
                   Ethereum
@@ -189,6 +180,7 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
                   onClick={() => handleSwitchNetwork(bsc.id)}
                   disabled={isSwitchingNetwork}
                   size='sm'
+                  aria-label='Switch to BSC'
                 >
                   <img src={Bsc} alt='icon' className='h-5 w-5' />
                   BSC
@@ -210,7 +202,11 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
           <span className='text-[#E1E4EA]'>|</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='ghost' className='flex items-center bg-accent-foreground'>
+              <Button
+                variant='ghost'
+                className='flex items-center bg-accent-foreground'
+                aria-label='Wallet Options'
+              >
                 <img src={Synergy} alt='icon' className='h-5 w-5' />
                 <span>{shortenAddr(address || '', 4, 4)}</span>
                 <ChevronDown className='h-4 w-4' />
@@ -222,6 +218,7 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
                   onClick={handleSignMessage}
                   disabled={isSigningMessage || hasSignedMessage}
                   className='w-full'
+                  aria-label='Sign Message'
                 >
                   {isSigningMessage || isSwitchingNetwork ? (
                     <>
@@ -236,7 +233,12 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
                 </Button>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Button onClick={handleDisconnect} variant='outline' className='w-full'>
+                <Button
+                  onClick={handleDisconnect}
+                  variant='outline'
+                  className='w-full'
+                  aria-label='Disconnect Wallet'
+                >
                   <LogOut className='h-5 w-5' />
                   Disconnect
                 </Button>
