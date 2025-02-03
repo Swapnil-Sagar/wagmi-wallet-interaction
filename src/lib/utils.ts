@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import MetaMaskIcon from '../assets/images/Metamask.svg'
+import MetaMaskIcon from '../assets/images/MetaMask.svg'
 import CoinbaseIcon from '../assets/images/Coinbase.svg'
 import PhantomIcon from '../assets/images/Phanton.svg'
 import WalletConnectIcon from '../assets/images/WalletConnect.svg'
