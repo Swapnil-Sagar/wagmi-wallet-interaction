@@ -25,7 +25,7 @@ import Bsc from '../assets/images/Bsc.svg'
 import { WalletConnectionProps } from '@/lib/interface'
 import WalletListDialog from './WalletListDialog'
 
-export function WalletConnection({ onError }: WalletConnectionProps) {
+export function WalletConnection({ onError, setAlertType }: WalletConnectionProps) {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
   const { connectAsync, connectors } = useConnect()
@@ -53,8 +53,17 @@ export function WalletConnection({ onError }: WalletConnectionProps) {
   }, [address])
 
   useEffect(() => {
+    if (isSigningMessage) {
+      setAlertType('default')
+      onError('Please sign the message')
+    } else {
+      setAlertType('destructive')
+      onError('')
+    }
+
     localStorage.setItem('hasSignedMessage', hasSignedMessage.toString())
-  }, [hasSignedMessage])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSigningMessage, hasSignedMessage])
 
   const handleConnect = async (connectorId: number, walletName: string) => {
     try {

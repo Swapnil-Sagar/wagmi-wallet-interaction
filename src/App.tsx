@@ -9,14 +9,15 @@ const queryClient = new QueryClient()
 
 export default function App() {
   const [error, setError] = useState<string>('')
+  const [alertType, setAlertType] = useState<'destructive' | 'default'>('destructive')
 
   useEffect(() => {
-    if (error) {
+    if (error && alertType !== 'default') {
       setTimeout(() => {
         setError('')
       }, 3000)
     }
-  }, [error])
+  }, [error, alertType])
 
   return (
     <WagmiProvider config={config}>
@@ -24,12 +25,12 @@ export default function App() {
         <div className='min-h-screen bg-gray-100 p-4 flex w-full justify-center items-center'>
           <div className='max-w-2xl mx-auto'>
             {error && (
-              <Alert variant='destructive' className='mb-4'>
+              <Alert variant={alertType} className='mb-4'>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            <WalletConnection onError={setError} />
+            <WalletConnection onError={setError} setAlertType={setAlertType} />
           </div>
         </div>
       </QueryClientProvider>
